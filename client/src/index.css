@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  /* Design Tokens mapped to dynamic Tailwind utility classes */
+  --color-background: #f8fbff;
+  --color-surface: #ffffff;
+  --color-primary: #0f4c81;
+  --color-primary-strong: #092d52;
+  --color-accent: #ff8a5c;
+  --color-accent-soft: #ffe8db;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-card: #f8fbff;
+
+  /* Dark mode overrides mapped natively in Tailwind v4 syntax */
+  --dark-color-background: #0f172a;
+  --dark-color-surface: #111827;
+  --dark-color-primary: #7c3aed;
+  --dark-color-primary-strong: #5b21b6;
+  --dark-color-accent: #38bdf8;
+  --dark-color-accent-soft: #0f172a;
+  --dark-color-text: #f8fafc;
+  --dark-color-muted: #cbd5e1;
+  --dark-color-border: #334155;
+  --dark-color-card: rgba(255, 255, 255, 0.08);
+
+  /* Font Configuration */
+  --font-sans: 'Inter', sans-serif;
+
+  /* Animation Definitions */
+  --animate-fade-in: fadeIn 0.4s ease-out forwards;
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Base Level Adjustments (Cleaned up: Box-sizing & defaults handled by Preflight) */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Custom Scrollbar Utilities */
+body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.2);
+  border-radius: 9999px;
+}
+
+/* Glassmorphism Compound Components */
+.glass {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.dark .glass {
+  background: rgba(30, 41, 59, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
