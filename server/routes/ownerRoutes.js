@@ -1,10 +1,11 @@
 import express from "express";
 import ownerAuth from "../middleware/ownerAuth.js";
-import { getOwnerProfile, updateOwnerProfile, updateOwnerAvatar, uploadDocuments } from "../controllers/ownerController.js";
+import { getOwnerProfile, updateOwnerProfile, updateOwnerAvatar, uploadDocuments, getOwnerListings } from "../controllers/ownerController.js";
 import { upload } from "../config/multer.js";
 const router = express.Router();
 
 
+router.get("/listings", ownerAuth, getOwnerListings);
 router.get("/profile", ownerAuth, getOwnerProfile);
 router.put("/profile", ownerAuth, updateOwnerProfile);
 router.patch("/avatar", ownerAuth, upload.single("avatar"), updateOwnerAvatar);

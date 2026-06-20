@@ -96,7 +96,12 @@ const ListingSchema = new mongoose.Schema(
       default: 0,
       min: [0, 'Rating cannot be less than 0'],
       max: [5, 'Rating cannot be more than 5'],
-      set: val => Math.round(val * 10) / 10 // Rounds to 1 decimal place (e.g., 4.3)
+      set: val => Math.round(val * 10) / 10
+    },
+    aiSummary: {
+      type: String,
+      default: '',
+      trim: true
     },
   },
   { timestamps: true }

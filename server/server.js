@@ -11,6 +11,8 @@ import listingRoutes from "./routes/listingRoutes.js"
 import ownerRoutes from "./routes/ownerRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import inquiryRoutes from "./routes/inquiryRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 
 // Load Env variables
@@ -39,11 +41,29 @@ app.use("/api/owner", ownerRoutes);
 app.use("/api/listing", listingRoutes);
 app.use("/api/review", reviewRoutes);
 app.use("/api/inquiry", inquiryRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Base route
 app.get('/', (req, res) => {
   res.json({ message: 'RentHouse API is running...' });
 });
+
+app.post('/api/gemini', async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    const response = await getGeminiResponse(prompt);
+
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 
 // 404 Handler
 app.use((req, res, next) => {
@@ -58,6 +78,8 @@ app.use((err, req, res, next) => {
     stack: process.env.NODE_ENV === 'production' ? null : err.stack
   });
 });
+
+
 
 
 const PORT = process.env.PORT || 5000;

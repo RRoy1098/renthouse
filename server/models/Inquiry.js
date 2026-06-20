@@ -25,7 +25,7 @@ const InquirySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'seen', 'accepted', 'rejected'],
+      enum: ['pending', 'seen', 'accepted', 'rejected', 'cancelled', 'confirmed', 'completed'],
       default: 'pending'
     },
     ownerReply: {

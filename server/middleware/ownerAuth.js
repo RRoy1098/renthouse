@@ -18,6 +18,14 @@ export default async function ownerAuth(req, res, next) {
       return res.status(401).json({ message: 'Not authorized, owner not found' });
     }
 
+    if (owner.status !== 'approved') {
+      return res.status(403).json({
+        message: owner.status === 'pending'
+          ? 'Account pending verification. Please wait for admin approval.'
+          : 'Account rejected. Please contact support.'
+      });
+    }
+
     req.owner = owner;
     next();
   } catch (error) {

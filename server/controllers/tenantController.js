@@ -249,13 +249,26 @@ export const searchListings = async (req, res) => {
       query["rules.genderPreference"] = genderPreference;
     }
 
-    // Execute query (Newest listings first)
-    const listings = await Listing.find(query)
-      .populate("owner", "name avatar phone")
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+
+    const [listings, total] = await Promise.all([
+      Listing.find(query)
+        .populate("owner", "name avatar phone")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Listing.countDocuments(query),
+    ]);
 
     res.status(200).json({
       success: true,
       count: listings.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
       data: listings,
     });
   } catch (error) {

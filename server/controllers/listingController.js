@@ -119,13 +119,26 @@ export const getAllListings = async (req, res) => {
       };
     }
 
-    const listings = await Listing.find(query)
-      .populate("owner", "name email phone avatar")
-      .sort({ createdAt: -1 });
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+
+    const [listings, total] = await Promise.all([
+      Listing.find(query)
+        .populate("owner", "name email phone avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Listing.countDocuments(query),
+    ]);
 
     res.status(200).json({
       success: true,
       count: listings.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
       data: listings
     });
   } catch (error) {
@@ -226,6 +239,76 @@ export const updateListing = async (req, res) => {
  * @route   DELETE /api/listings/:id
  * @access  Private (Owner Only)
  */
+/**
+ * @desc    Update listing status (available/occupied)
+ * @route   PATCH /api/listings/:id/status
+ * @access  Private (Owner Only)
+ */
+export const updateListingStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    
+    if (!status || !['available', 'occupied'].includes(status)) {
+      return res.status(400).json({ success: false, message: "Status must be 'available' or 'occupied'" });
+    }
+
+    let listing = await Listing.findById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ success: false, message: "Listing not found" });
+    }
+
+    if (listing.owner.toString() !== req.owner.id) {
+      return res.status(403).json({ success: false, message: "Not authorized to update this listing" });
+    }
+
+    listing.status = status;
+    await listing.save();
+
+    res.status(200).json({ success: true, message: `Listing marked as ${status}`, data: listing });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+/**
+ * @desc    Delete a specific image from a listing
+ * @route   DELETE /api/listings/:id/images
+ * @access  Private (Owner Only)
+ */
+export const deleteListingImage = async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ success: false, message: "Listing not found" });
+    }
+
+    if (listing.owner.toString() !== req.owner.id) {
+      return res.status(403).json({ success: false, message: "Not authorized to update this listing" });
+    }
+
+    const { publicId } = req.query;
+    if (!publicId) {
+      return res.status(400).json({ success: false, message: "publicId query parameter is required" });
+    }
+    const imageIndex = listing.images.findIndex(img => img.public_id === publicId);
+    
+    if (imageIndex === -1) {
+      return res.status(404).json({ success: false, message: "Image not found" });
+    }
+
+    // Delete from Cloudinary
+    await deleteFromCloudinary(publicId);
+
+    // Remove from array
+    listing.images.splice(imageIndex, 1);
+    await listing.save();
+
+    res.status(200).json({ success: true, message: "Image deleted successfully", data: listing });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
 export const deleteListing = async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);

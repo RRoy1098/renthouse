@@ -25,7 +25,6 @@ export const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
@@ -38,7 +37,6 @@ export const loginAdmin = async (req, res) => {
       return res.status(401).json({ message: 'Invalid admin credentials' });
     }
 
-    // Pass email and role to the token payload, keep id null/empty for admin
     const token = generateToken('admin_root', 'admin', { key: process.env.ADMIN_LOGIN_KEY });
 
     res.status(200).json({
@@ -116,6 +114,7 @@ export const loginTenant = async (req, res) => {
         id: tenant._id,
         name: tenant.name,
         email: tenant.email,
+        phone: tenant.phone,
         isVerified: tenant.isVerified
       }
     });
@@ -130,15 +129,15 @@ export const loginTenant = async (req, res) => {
 // ==========================================
 
 /**
- * @desc    Register a new owner
+ * @desc    Register a new owner (no password required, status = pending)
  * @route   POST /api/auth/owner/register
  */
 export const registerOwner = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, phone, businessName } = req.body;
 
-    if (!name || !email || !password || !phone) {
-      return res.status(400).json({ message: 'Please enter all required fields' });
+    if (!name || !email || !phone) {
+      return res.status(400).json({ message: 'Please enter all required fields (name, email, phone)' });
     }
 
     const ownerExists = await Owner.findOne({ email });
@@ -146,17 +145,18 @@ export const registerOwner = async (req, res) => {
       return res.status(400).json({ message: 'Owner already exists with this email' });
     }
 
-    const owner = await Owner.create({ name, email, password, phone });
+    const owner = await Owner.create({ name, email, phone, businessName, status: 'pending' });
 
     res.status(201).json({
       success: true,
-      message: 'Owner registered successfully',
-      token: generateToken(owner._id, 'owner'),
+      message: 'Owner registered successfully. Your account is pending admin verification. You will receive an email with login credentials once approved.',
       data: {
         id: owner._id,
         name: owner.name,
         email: owner.email,
-        phone: owner.phone
+        phone: owner.phone,
+        businessName: owner.businessName,
+        status: owner.status
       }
     });
   } catch (error) {
@@ -165,7 +165,7 @@ export const registerOwner = async (req, res) => {
 };
 
 /**
- * @desc    Login owner
+ * @desc    Login owner (only allowed if status is 'approved')
  * @route   POST /api/auth/owner/login
  */
 export const loginOwner = async (req, res) => {
@@ -178,7 +178,19 @@ export const loginOwner = async (req, res) => {
 
     const owner = await Owner.findOne({ email }).select('+password');
 
-    if (!owner || !(await owner.matchPassword(password))) {
+    if (!owner) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    if (owner.status !== 'approved') {
+      return res.status(403).json({
+        message: owner.status === 'pending'
+          ? 'Your account is pending admin verification. You will receive an email once approved.'
+          : 'Your account has been rejected. Please contact support.'
+      });
+    }
+
+    if (!(await owner.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
@@ -189,12 +201,10 @@ export const loginOwner = async (req, res) => {
         id: owner._id,
         name: owner.name,
         email: owner.email,
-        isVerified: owner.isVerified
+        status: owner.status
       }
     });
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };
-
-

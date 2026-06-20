@@ -1,4 +1,5 @@
 import Owner from "../models/Owner.js";
+import Listing from "../models/Listing.js";
 import { uploadImageToCloudinary, deleteFromCloudinary } from "../config/cloudinary.js";
 
 export const getOwnerProfile = async (req, res) => {
@@ -37,6 +38,26 @@ export const updateOwnerAvatar = async (req, res) => {
     await owner.save();
 
     res.status(200).json({ success: true, avatar: owner.avatar });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+/**
+ * @desc    Get all listings belonging to the logged-in owner
+ * @route   GET /api/owner/listings
+ * @access  Private (Owner Only)
+ */
+export const getOwnerListings = async (req, res) => {
+  try {
+    const listings = await Listing.find({ owner: req.owner.id })
+      .sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      success: true,
+      count: listings.length,
+      data: listings
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }

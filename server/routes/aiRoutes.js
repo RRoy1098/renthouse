@@ -1,22 +1,14 @@
 import express from 'express';
 import {
+  chat,
   parseSearch,
-  generateDesc,
-  suggestRent,
-  getLocSummary,
-  getRecommendations
+  draftMessage,
 } from '../controllers/aiController.js';
-
-import { ownerAuth } from "../middleware/ownerAuth.js"
-import { adminAuth } from "../middleware/adminAuth.js"
-import { tenantAuth } from "../middleware/tenantAuth.js"
 
 const router = express.Router();
 
-router.post('/parse-search', tenantAuth, parseSearch);
-router.post('/generate-description', ownerAuth, generateDesc);
-router.post('/suggest-price', ownerAuth, suggestRent);
-router.post('/location-summary', ownerAuth, getLocSummary);
-router.get('/recommendations', tenantAuth, getRecommendations);
+router.post('/chat', chat);
+router.post('/parse-search', parseSearch);
+router.post('/draft-message', draftMessage);
 
 export default router;

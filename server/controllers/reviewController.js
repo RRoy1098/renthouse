@@ -8,7 +8,6 @@ export const createReview = async (req, res) => {
     const listing = await Listing.findById(listingId);
     if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
 
-    // Ensure they don't review twice because of our schema tracking index
     const alreadyReviewed = await Review.findOne({ listing: listingId, tenant: req.tenant.id });
     if (alreadyReviewed) return res.status(400).json({ success: false, message: "You already reviewed this place" });
 
